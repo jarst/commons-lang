@@ -420,7 +420,27 @@ public class StringEscapeUtilsTest {
         assertEquals("Supplementary characters mixed with basic characters should be decoded correctly", "a b c \uD84C\uDFB4",
                 StringEscapeUtils.unescapeXml("a b c &#144308;") );
     }
-        
+
+    @Test
+    public void escapeCData() throws Exception {
+        assertEquals( "<![CDATA[]]>", StringEscapeUtils.escapeCData(""));
+
+        assertEquals("<![CDATA[Chars]]>", StringEscapeUtils.escapeCData("Chars"));
+
+        assertEquals("<![CDATA[More ]]]]><![CDATA[> Chars]]>",
+                StringEscapeUtils.escapeCData("More ]]> Chars"));
+    }
+
+    @Test
+    public void unescapeCData() throws Exception {
+        assertEquals("", StringEscapeUtils.unescapeCData("<![CDATA[]]>"));
+
+        assertEquals("Chars", StringEscapeUtils.unescapeCData("<![CDATA[Chars]]>"));
+
+        assertEquals("More ]]> Chars" ,
+                StringEscapeUtils.unescapeCData("<![CDATA[More ]]]]><![CDATA[> Chars]]>"));
+    }
+
     // Tests issue #38569
     // http://issues.apache.org/bugzilla/show_bug.cgi?id=38569
     @Test

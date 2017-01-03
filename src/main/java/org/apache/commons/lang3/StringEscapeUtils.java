@@ -41,6 +41,9 @@ public class StringEscapeUtils {
 
     /* ESCAPE TRANSLATORS */
 
+    private static final String CDATA_START_SEQ = "<![CDATA["; //TODO These should not be here
+    private static final String CDATA_END_SEQ = "]]>";
+
     /**
      * Translator object for escaping Java. 
      * 
@@ -200,6 +203,16 @@ public class StringEscapeUtils {
             NumericEntityEscaper.between(0x86, 0x9f),
             new UnicodeUnpairedSurrogateRemover()
         );
+
+    /**
+     * Partial CDATA translator.
+     * TODO This violates convention used in this class
+     */
+    private static final CharSequenceTranslator ESCAPE_CDATA =
+            new LookupTranslator(
+                    new String[][] {
+                            { CDATA_END_SEQ, "]]" + CDATA_END_SEQ + CDATA_START_SEQ + ">" }
+            });
 
     /**
      * Translator object for escaping HTML version 3.0.
@@ -368,6 +381,17 @@ public class StringEscapeUtils {
             new LookupTranslator(EntityArrays.APOS_UNESCAPE()),
             new NumericEntityUnescaper()
         );
+
+    /**
+     * Translator for unwrapping CDATA back into characters.
+     */
+    private static final CharSequenceTranslator UNESCAPE_CDATA =
+            new LookupTranslator(
+                    new String[][]{
+                        {CDATA_START_SEQ, StringUtils.EMPTY},
+                        {CDATA_END_SEQ, StringUtils.EMPTY},
+                    }
+            );
 
     /**
      * Translator object for unescaping escaped Comma Separated Value entries.
@@ -748,6 +772,26 @@ public class StringEscapeUtils {
      */
     public static final String unescapeXml(final String input) {
         return UNESCAPE_XML.translate(input);
+    }
+
+    /**
+     * Wraps Characters into CDATA section.
+     * @param input
+     * @return
+     */
+    public static final String escapeCData(final String input) {
+        return new StringBuilder(CDATA_START_SEQ)
+                .append(ESCAPE_CDATA.translate(input))
+                .append(CDATA_END_SEQ).toString();
+    }
+
+    /**
+     * UInwraps CDATA back into characters.
+     * @param input
+     * @return
+     */
+    public static final String unescapeCData(final String input) {
+        return UNESCAPE_CDATA.translate(input);
     }
 
     //-----------------------------------------------------------------------
